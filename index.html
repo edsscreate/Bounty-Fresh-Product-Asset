@@ -65,7 +65,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 
 /* STEP 1: Replace these values with your Firebase Web App config. */
 const firebaseConfig = {
-  apiKey: "AIzaSyCN0hNLsHR64ETzEPvpK-hX4O7h49vB_Z0",
+  apiKey: "AIzaSyCNOhNlsHR64ETzEPvpK-hX4O7h49vB_70",
   authDomain: "bounty-fresh-product-asset.firebaseapp.com",
   projectId: "bounty-fresh-product-asset",
   storageBucket: "bounty-fresh-product-asset.firebasestorage.app",
@@ -271,7 +271,7 @@ $("closeAuthBtn").addEventListener("click",()=>$("authModal").classList.remove("
 $("authModal").addEventListener("click",e=>{if(e.target.id==="authModal")$("authModal").classList.remove("show")});
 $("authForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  if(!configured()){toast("Firebase config is missing. Upload the FINAL CONFIGURED index.html file.");return;}
+  if(!configured()){toast("Firebase config is missing or old file is cached. Upload this exact FINAL index.html.");return;}
   try{
     await signInWithEmailAndPassword(auth,$("adminEmailInput").value.trim(),$("adminPasswordInput").value);
     $("authModal").classList.remove("show");
