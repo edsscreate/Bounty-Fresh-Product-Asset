@@ -271,7 +271,7 @@ $("closeAuthBtn").addEventListener("click",()=>$("authModal").classList.remove("
 $("authModal").addEventListener("click",e=>{if(e.target.id==="authModal")$("authModal").classList.remove("show")});
 $("authForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  if(!configured()){toast("Paste Firebase config first.");return;}
+  if(!configured()){toast("Firebase config is missing. Upload the FINAL CONFIGURED index.html file.");return;}
   try{
     await signInWithEmailAndPassword(auth,$("adminEmailInput").value.trim(),$("adminPasswordInput").value);
     $("authModal").classList.remove("show");
