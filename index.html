@@ -20,16 +20,144 @@
 .modal-bg{position:fixed;inset:0;z-index:50;display:none;place-items:center;padding:15px;background:rgba(30,42,54,.62);backdrop-filter:blur(8px)}.modal-bg.show{display:grid}.modal{width:min(760px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:28px;box-shadow:0 28px 80px rgba(0,0,0,.28)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}.modal-head h3{margin:0;font-size:18px}.close{width:38px;height:38px;border:0;border-radius:13px;background:#f1f4f7;font-size:22px}.modal-body{padding:20px}.auth-grid{display:grid;gap:10px}.detail{display:grid;grid-template-columns:.85fr 1.15fr;gap:16px}.detail-img{height:320px;border-radius:24px}.list{display:grid;gap:10px}.row{display:grid;grid-template-columns:130px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid #eef2f6;font-size:13px}.row b{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}.copybox{margin-top:14px;padding:13px;border-radius:17px;background:#f8fafc;border:1px solid #eef2f6;color:var(--muted);font-size:12px;line-height:1.5}.toast{position:fixed;right:14px;bottom:14px;z-index:80;max-width:340px;padding:12px 14px;border-radius:15px;color:#fff;background:#1e2a36;font-size:12px;font-weight:850;box-shadow:0 14px 35px rgba(30,42,54,.25);transform:translateY(140%);transition:.25s}.toast.show{transform:translateY(0)}
 @media(max-width:980px){.catalog{grid-template-columns:repeat(2,1fr)}.search{grid-template-columns:1fr 1fr}.search .btn{grid-column:span 2}.form-grid{grid-template-columns:1fr 1fr}}@media(max-width:650px){.app{padding:15px 9px 32px}.top{align-items:flex-start}.actions{display:none}.hero{padding:22px;border-radius:25px}.hero h2{font-size:34px}.stats{grid-template-columns:1fr 1fr;gap:9px}.toolbar{position:relative;border-radius:22px}.search{grid-template-columns:1fr}.search .btn{grid-column:auto}.catalog{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field.half{grid-column:auto}.detail{grid-template-columns:1fr}.detail-img{height:230px}.row{grid-template-columns:1fr;gap:4px}input,select,textarea{font-size:16px!important}}
 .google-btn{width:100%;background:#fff;color:#1f2b38;border:1px solid var(--line);box-shadow:0 10px 22px rgba(126,35,20,.06);font-weight:900}.google-icon{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#4285F4,#34A853,#FBBC05,#EA4335);color:#fff;font-size:12px;font-weight:950}.auth-divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.5px}.auth-divider:before,.auth-divider:after{content:"";height:1px;background:var(--line);flex:1}
+
+/* Cover banner / photo save fix */
+.hero.has-banner{
+  min-height:340px;
+  background:#111;
+  color:#fff;
+  display:flex;
+  align-items:flex-end;
+  padding:0;
+}
+.hero.has-banner:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,rgba(0,0,0,.74),rgba(0,0,0,.32),rgba(0,0,0,.08));
+  z-index:1;
+}
+.hero.has-banner:after{display:none}
+.hero.has-banner .hero-bg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:0;
+}
+.hero.has-banner .hero-copy{
+  padding:34px;
+  max-width:740px;
+}
+.hero.has-banner .kicker{
+  background:rgba(255,255,255,.18);
+  color:#fff;
+  backdrop-filter:blur(8px);
+}
+.hero.has-banner h2,
+.hero.has-banner h2 span,
+.hero.has-banner p{
+  color:#fff;
+  text-shadow:0 8px 24px rgba(0,0,0,.42);
+}
+.banner-preview,.photo-preview{
+  min-height:132px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:linear-gradient(135deg,#fff7e5,#ffe4df);
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  color:var(--muted);
+  font-size:12px;
+  text-align:center;
+  padding:12px;
+}
+.banner-preview img,.photo-preview img{
+  width:100%;
+  height:170px;
+  object-fit:cover;
+  display:block;
+  border-radius:14px;
+}
+.settings-card{margin-bottom:16px}
+.upload-status{
+  display:none;
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#fff7e4;
+  border:1px solid #ffddb0;
+  color:#775000;
+  font-size:11px;
+  line-height:1.4;
+}
+.upload-status.show{display:block}
+.upload-status.error{
+  background:#fff0f0;
+  border-color:#ffcaca;
+  color:#9b1515;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header class="top"><div class="brand"><div class="logo">🐔</div><div><h1>Bounty Fresh Asset Portal</h1><p>Phase 2 — Firebase catalog + admin upload</p></div></div><div class="actions"><span class="sync warn" id="syncStatus">Checking Firebase</span><button class="btn secondary" id="downloadCsvBtn">CSV Template</button><button class="btn primary" id="adminBtn">Admin Login</button></div></header>
-<section class="hero"><div class="hero-copy"><div class="kicker">Firebase Product Library</div><h2>Upload once, share <span>one catalog link.</span></h2><p>Admin can upload product photos/files and product details. Viewers can search products, check availability, copy product details, and download assets.</p></div></section>
+<section class="hero" id="portalHero">
+  <img class="hero-bg" id="heroBannerImage" alt="Portal banner" style="display:none">
+  <div class="hero-copy">
+    <div class="kicker" id="heroKicker">Firebase Product Library</div>
+    <h2 id="heroTitle">Upload once, share one catalog link.</h2>
+    <p id="heroSubtitle">Admin can upload product photos/files and product details. Viewers can search products, check availability, copy product details, and download assets.</p>
+  </div>
+</section>
 <div class="notice" id="setupNotice"><b>Setup needed:</b> paste your Firebase config in the <code>firebaseConfig</code> object inside this HTML, then enable Firebase Auth, Firestore, and Storage.</div>
 <section class="stats"><div class="stat"><small>Total Products</small><b id="totalProducts">0</b><span>in this catalog</span></div><div class="stat"><small>Categories</small><b id="totalCategories">0</b><span>product groups</span></div><div class="stat"><small>Available</small><b id="totalAvailable">0</b><span>active items</span></div><div class="stat"><small>Accounts</small><b id="totalAccounts">0</b><span>store/channel tags</span></div></section>
 
-<section class="admin" id="adminPanel"><div class="panel"><div class="panel-head"><div><h3 id="formTitle">Add Product Asset</h3><span id="adminEmail">Signed in</span></div><button class="btn ghost" id="signOutBtn">Sign Out</button></div><div class="panel-body">
+<section class="admin" id="adminPanel">
+<div class="panel settings-card">
+  <div class="panel-head">
+    <div>
+      <h3>Portal Cover Banner</h3>
+      <span>Upload/change the top cover photo shown on the catalog</span>
+    </div>
+  </div>
+  <div class="panel-body">
+    <form id="bannerForm">
+      <div class="form-grid">
+        <div class="field full">
+          <label>Banner Preview</label>
+          <div class="banner-preview" id="bannerPreview">No banner uploaded yet</div>
+        </div>
+        <div class="field">
+          <label>Cover Photo / Banner</label>
+          <input id="bannerFile" type="file" accept="image/*">
+          <span class="helper">Recommended: wide banner image, around 1600 × 600 px.</span>
+        </div>
+        <div class="field">
+          <label>Small Label</label>
+          <input id="bannerKicker" placeholder="Firebase Product Library">
+        </div>
+        <div class="field">
+          <label>Cover Title</label>
+          <input id="bannerTitle" placeholder="Upload once, share one catalog link.">
+        </div>
+        <div class="field full">
+          <label>Cover Description</label>
+          <textarea id="bannerSubtitle" placeholder="Short description shown over the banner."></textarea>
+        </div>
+      </div>
+      <div class="upload-status" id="bannerUploadStatus"></div>
+      <div class="form-actions">
+        <button class="btn primary" type="submit" id="saveBannerBtn">Save Cover Banner</button>
+        <button class="btn secondary" type="button" id="clearBannerFormBtn">Reset Text</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="panel"><div class="panel-head"><div><h3 id="formTitle">Add Product Asset</h3><span id="adminEmail">Signed in</span></div><button class="btn ghost" id="signOutBtn">Sign Out</button></div><div class="panel-body">
 <form id="productForm">
 <div class="form-grid">
 <div class="field"><label>Product Name</label><input id="pName" required placeholder="Young & Tender Whole Chicken"></div>
@@ -41,11 +169,12 @@
 <div class="field half"><label>Channels</label><input id="pChannels" placeholder="Supermarket; Wet Market; Online"><span class="helper">Separate using semicolon or comma.</span></div>
 <div class="field"><label>Asset Type</label><input id="pAssetType" placeholder="Packshot / Lifestyle / Product Sheet"></div>
 <div class="field full"><label>Accounts / Stores</label><input id="pAccounts" placeholder="SM; Robinsons; Puregold; Lazada; Shopee"></div>
-<div class="field"><label>Product Photo</label><input id="pPhoto" type="file" accept="image/*"><span class="helper" id="photoHelper">Upload product packshot/photo.</span></div>
+<div class="field"><label>Product Photo</label><input id="pPhoto" type="file" accept="image/*"><span class="helper" id="photoHelper">Upload product packshot/photo.</span><div class="photo-preview" id="productPhotoPreview" style="margin-top:8px;min-height:92px">No product photo selected</div></div>
 <div class="field"><label>Downloadable Asset</label><input id="pAssetFile" type="file"><span class="helper" id="assetHelper">Optional: PNG/JPG/PDF/source file.</span></div>
 <div class="field"><label>Existing Photo URL</label><input id="pPhotoUrl" placeholder="Auto-filled after upload"></div>
 <div class="field full"><label>Notes</label><textarea id="pNotes" placeholder="Availability notes, usage reminders, campaign notes..."></textarea></div>
 </div>
+<div class="upload-status" id="productUploadStatus"></div>
 <div class="form-actions"><button class="btn primary" type="submit" id="saveProductBtn">Save Product</button><button class="btn secondary" type="button" id="clearFormBtn">Clear Form</button></div>
 </form>
 </div></div></section>
@@ -61,7 +190,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 /* STEP 1: Replace these values with your Firebase Web App config. */
@@ -75,7 +204,7 @@ const firebaseConfig = {
   measurementId: "G-J31RWKPQ1H"
 };
 
-let app, auth, db, storage, googleProvider, unsubscribeProducts, currentUser=null, editingId=null;
+let app, auth, db, storage, googleProvider, unsubscribeProducts, unsubscribeSettings, currentUser=null, editingId=null;
 let products=[], activeCategory="";
 const $=id=>document.getElementById(id);
 
@@ -106,6 +235,7 @@ function initFirebase(){
       renderCatalog();
     });
     listenProducts();
+    listenPortalSettings();
     getRedirectResult(auth).catch(error=>toast(error.message || 'Google login failed.'));
   }catch(error){
     sync("Firebase error","bad");
@@ -113,6 +243,110 @@ function initFirebase(){
     toast(error.message || "Firebase initialization failed.");
   }
 }
+
+function defaultSettings(){
+  return {
+    bannerURL:"",
+    kicker:"Firebase Product Library",
+    title:"Upload once, share one catalog link.",
+    subtitle:"Admin can upload product photos/files and product details. Viewers can search products, check availability, copy product details, and download assets."
+  };
+}
+function setUploadStatus(id,message,type=""){
+  const el=$(id);
+  if(!el)return;
+  el.textContent=message;
+  el.className="upload-status show"+(type==="error"?" error":"");
+}
+function clearUploadStatus(id){
+  const el=$(id);
+  if(!el)return;
+  el.className="upload-status";
+  el.textContent="";
+}
+function applyPortalSettings(settings={}){
+  const s={...defaultSettings(),...settings};
+  const hero=$("portalHero");
+  const img=$("heroBannerImage");
+
+  $("heroKicker").textContent=s.kicker || defaultSettings().kicker;
+  $("heroTitle").textContent=s.title || defaultSettings().title;
+  $("heroSubtitle").textContent=s.subtitle || defaultSettings().subtitle;
+
+  if(s.bannerURL){
+    img.src=s.bannerURL;
+    img.style.display="block";
+    hero.classList.add("has-banner");
+    $("bannerPreview").innerHTML=`<img src="${esc(s.bannerURL)}" alt="Current cover banner">`;
+  }else{
+    img.removeAttribute("src");
+    img.style.display="none";
+    hero.classList.remove("has-banner");
+    $("bannerPreview").textContent="No banner uploaded yet";
+  }
+
+  $("bannerKicker").value=s.kicker || defaultSettings().kicker;
+  $("bannerTitle").value=s.title || defaultSettings().title;
+  $("bannerSubtitle").value=s.subtitle || defaultSettings().subtitle;
+}
+function listenPortalSettings(){
+  if(unsubscribeSettings)unsubscribeSettings();
+  const refDoc=doc(db,"settings","portal");
+  unsubscribeSettings=onSnapshot(refDoc,snapshot=>{
+    applyPortalSettings(snapshot.exists()?snapshot.data():defaultSettings());
+  },error=>{
+    applyPortalSettings(defaultSettings());
+    toast(error.message || "Unable to load portal settings.");
+  });
+}
+async function saveBannerSettings(event){
+  event.preventDefault();
+  if(!currentUser){toast("Sign in as admin first.");return;}
+  clearUploadStatus("bannerUploadStatus");
+  const button=$("saveBannerBtn");
+  button.disabled=true;
+  button.textContent="Saving...";
+  try{
+    let current={};
+    const refDoc=doc(db,"settings","portal");
+    const existing=await getDoc(refDoc);
+    if(existing.exists())current=existing.data();
+
+    let bannerURL=current.bannerURL || "";
+    const file=$("bannerFile").files[0];
+    if(file){
+      setUploadStatus("bannerUploadStatus","Uploading banner photo to Firebase Storage...");
+      bannerURL=await uploadFile(file,"product-assets/banner");
+    }
+
+    setUploadStatus("bannerUploadStatus","Saving banner settings to Firestore...");
+    await setDoc(refDoc,{
+      bannerURL,
+      kicker:$("bannerKicker").value.trim() || defaultSettings().kicker,
+      title:$("bannerTitle").value.trim() || defaultSettings().title,
+      subtitle:$("bannerSubtitle").value.trim() || defaultSettings().subtitle,
+      updatedAt:serverTimestamp(),
+      updatedBy:currentUser.email
+    },{merge:true});
+
+    $("bannerFile").value="";
+    setUploadStatus("bannerUploadStatus","Cover banner saved successfully.");
+    toast("Cover banner saved.");
+  }catch(error){
+    setUploadStatus("bannerUploadStatus",`Banner was not saved: ${error.message || error}`,"error");
+    toast(error.message || "Unable to save cover banner.");
+  }finally{
+    button.disabled=false;
+    button.textContent="Save Cover Banner";
+  }
+}
+function resetBannerText(){
+  const d=defaultSettings();
+  $("bannerKicker").value=d.kicker;
+  $("bannerTitle").value=d.title;
+  $("bannerSubtitle").value=d.subtitle;
+}
+
 function listenProducts(){
   if(unsubscribeProducts)unsubscribeProducts();
   const q=query(collection(db,"products"),orderBy("updatedAt","desc"));
@@ -176,11 +410,18 @@ async function uploadFile(file,path){
   if(!file)return "";
   const safeName=file.name.replace(/[^\w.\-]+/g,"-");
   const fileRef=ref(storage,`${path}/${Date.now()}-${safeName}`);
-  await uploadBytes(fileRef,file);
-  return await getDownloadURL(fileRef);
+  try{
+    await uploadBytes(fileRef,file);
+    return await getDownloadURL(fileRef);
+  }catch(error){
+    let message=error.message || String(error);
+    if(error.code==="storage/unauthorized") message="Storage permission denied. Check Storage Rules and make sure you are logged in as edsscreate@gmail.com.";
+    if(error.code==="storage/unknown") message="Storage upload failed. Check if Firebase Storage is enabled and rules are published.";
+    throw new Error(message);
+  }
 }
 function clearForm(){
-  editingId=null;$("productForm").reset();$("pPhotoUrl").value="";$("formTitle").textContent="Add Product Asset";$("saveProductBtn").textContent="Save Product";$("photoHelper").textContent="Upload product packshot/photo.";$("assetHelper").textContent="Optional: PNG/JPG/PDF/source file.";
+  editingId=null;$("productForm").reset();$("pPhotoUrl").value="";$("formTitle").textContent="Add Product Asset";$("saveProductBtn").textContent="Save Product";$("photoHelper").textContent="Upload product packshot/photo.";$("assetHelper").textContent="Optional: PNG/JPG/PDF/source file.";$("productPhotoPreview").textContent="No product photo selected";
 }
 async function saveProduct(e){
   e.preventDefault();
@@ -197,8 +438,12 @@ async function saveProduct(e){
     const photoFile = $("pPhoto").files[0];
     const assetFile = $("pAssetFile").files[0];
 
-    if(photoFile) photoURL = await uploadFile(photoFile,"product-assets/photos");
+    if(photoFile){
+      setUploadStatus("productUploadStatus","Uploading product photo to Firebase Storage...");
+      photoURL = await uploadFile(photoFile,"product-assets/photos");
+    }
     if(assetFile){
+      setUploadStatus("productUploadStatus","Uploading downloadable asset to Firebase Storage...");
       assetURL = await uploadFile(assetFile,"product-assets/files");
       assetName = assetFile.name;
     }
@@ -223,6 +468,8 @@ async function saveProduct(e){
 
     if(!payload.name || !payload.category) throw new Error("Product name and category are required.");
 
+    setUploadStatus("productUploadStatus","Saving product details to Firestore...");
+
     if(editingId){
       await updateDoc(doc(db,"products",editingId),payload);
       toast("Product updated.");
@@ -230,8 +477,10 @@ async function saveProduct(e){
       await addDoc(collection(db,"products"),{...payload,createdAt:serverTimestamp(),createdBy:currentUser.email});
       toast("Product saved.");
     }
+    setUploadStatus("productUploadStatus","Product saved successfully.");
     clearForm();
   }catch(error){
+    setUploadStatus("productUploadStatus",`Product/photo was not saved: ${error.message || error}`,"error");
     toast(error.message || "Unable to save product.");
   }finally{
     saveBtn.disabled=false;
@@ -266,6 +515,22 @@ window.deleteProductItem=async id=>{
   catch(error){toast(error.message || "Unable to delete product.");}
 }
 
+$("bannerForm").addEventListener("submit",saveBannerSettings);
+$("clearBannerFormBtn").addEventListener("click",resetBannerText);
+$("bannerFile").addEventListener("change",()=>{
+  const file=$("bannerFile").files[0];
+  if(file){
+    $("bannerPreview").innerHTML=`<img src="${URL.createObjectURL(file)}" alt="Selected cover banner">`;
+    clearUploadStatus("bannerUploadStatus");
+  }
+});
+$("pPhoto").addEventListener("change",()=>{
+  const file=$("pPhoto").files[0];
+  if(file){
+    $("productPhotoPreview").innerHTML=`<img src="${URL.createObjectURL(file)}" alt="Selected product photo">`;
+    clearUploadStatus("productUploadStatus");
+  }
+});
 $("productForm").addEventListener("submit",saveProduct);
 $("clearFormBtn").addEventListener("click",clearForm);
 $("adminBtn").addEventListener("click",()=>{currentUser?$("adminPanel").scrollIntoView({behavior:"smooth"}):$("authModal").classList.add("show")});
