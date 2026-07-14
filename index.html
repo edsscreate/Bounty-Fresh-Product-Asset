@@ -79,6 +79,64 @@
   color:#9b1515;
 }
 
+
+/* Product image fit fix — show full packshot, no crop */
+.img{
+  background:#fffaf2!important;
+}
+.img img{
+  object-fit:contain!important;
+  background:#fffaf2!important;
+  padding:10px!important;
+}
+.card .img{
+  height:230px!important;
+}
+.detail-img{
+  height:390px!important;
+  background:#fff!important;
+}
+.detail-img img{
+  object-fit:contain!important;
+  padding:14px!important;
+  background:#fff!important;
+}
+.product-photo-full{
+  width:100%;
+  max-height:420px;
+  object-fit:contain;
+  background:#fff;
+  border-radius:20px;
+}
+@media(max-width:650px){
+  .card .img{height:240px!important}
+  .detail-img{height:320px!important}
+  .img img{padding:8px!important}
+}
+
+
+.visibility-badge{
+  display:inline-flex;
+  padding:5px 8px;
+  border-radius:999px;
+  background:#edf2ff;
+  color:#3154a3;
+  font-size:10px;
+  font-weight:900;
+}
+.visibility-badge.private{background:#fff0f0;color:#ad1717}
+.visibility-badge.draft{background:#fff7df;color:#8a5a00}
+.viewer-note{
+  margin-bottom:12px;
+  padding:11px 13px;
+  border-radius:16px;
+  background:#f8fafc;
+  border:1px solid var(--line);
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.4;
+}
+
 </style>
 </head>
 <body>
@@ -103,6 +161,7 @@
 <div class="field"><label>Pack Size</label><input id="pPackSize" placeholder="500g / 1kg"></div>
 <div class="field"><label>SKU Code</label><input id="pSku" placeholder="SKU-001"></div>
 <div class="field"><label>Status</label><select id="pStatus"><option>Available</option><option>Limited</option><option>Seasonal</option><option>Check Availability</option><option>Discontinued</option></select></div>
+<div class="field"><label>Visibility</label><select id="pVisibility"><option>Public</option><option>Private</option><option>Draft</option></select><span class="helper">Public = visible to everyone. Private/Draft = visible only when logged in.</span></div>
 <div class="field half"><label>Channels</label><input id="pChannels" placeholder="Supermarket; Wet Market; Online"><span class="helper">Separate using semicolon or comma.</span></div>
 <div class="field"><label>Asset Type</label><input id="pAssetType" placeholder="Packshot / Lifestyle / Product Sheet"></div>
 <div class="field full"><label>Accounts / Stores</label><input id="pAccounts" placeholder="SM; Robinsons; Puregold; Lazada; Shopee"></div>
@@ -117,6 +176,7 @@
 </div></div></section>
 
 <section class="toolbar"><div class="search"><input id="searchInput" type="search" placeholder="Search product name, SKU, account, channel..."><select id="categoryFilter"><option value="">All Categories</option></select><select id="channelFilter"><option value="">All Channels</option></select><select id="statusFilter"><option value="">All Status</option></select><button class="btn yellow" id="clearFiltersBtn">Clear</button></div><div class="pills" id="categoryPills"></div></section>
+<div class="viewer-note" id="viewerNote">Public view: only products marked as Public are visible.</div>
 <section class="catalog" id="catalogGrid"><div class="empty show"><h3>Loading products...</h3><p>Please wait.</p></div></section>
 </div>
 
@@ -127,7 +187,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* STEP 1: Replace these values with your Firebase Web App config. */
 const firebaseConfig = {
@@ -168,9 +228,9 @@ function initFirebase(){
       $("adminPanel").classList.toggle("show",!!user);
       $("adminBtn").textContent=user?"Admin Panel":"Admin Login";
       $("adminEmail").textContent=user?`Signed in as ${user.email}`:"Signed in";
+      listenProducts();
       renderCatalog();
     });
-    listenProducts();
     getRedirectResult(auth).catch(error=>toast(error.message || 'Google login failed.'));
   }catch(error){
     sync("Firebase error","bad");
@@ -194,11 +254,25 @@ function clearUploadStatus(id){
 }
 
 function listenProducts(){
+  if(!db)return;
   if(unsubscribeProducts)unsubscribeProducts();
-  const q=query(collection(db,"products"),orderBy("updatedAt","desc"));
+
+  const productsRef=collection(db,"products");
+  const q=currentUser
+    ? query(productsRef,orderBy("updatedAt","desc"))
+    : query(productsRef,where("visibility","==","Public"));
+
   unsubscribeProducts=onSnapshot(q,snap=>{
     products=snap.docs.map(d=>({id:d.id,...d.data()}));
-    sync("Live Firebase data","ok");
+
+    // Public query has no orderBy to avoid index issues, so sort here.
+    products.sort((a,b)=>{
+      const ax=a.updatedAt?.seconds || 0;
+      const bx=b.updatedAt?.seconds || 0;
+      return bx-ax;
+    });
+
+    sync(currentUser?"Live Firebase data — admin view":"Public catalog view","ok");
     initFilters();
     renderCatalog();
   },error=>{
@@ -218,7 +292,7 @@ function initFilters(){
 function results(){
   let kw=$("searchInput").value.trim().toLowerCase(),cat=$("categoryFilter").value,ch=$("channelFilter").value,stat=$("statusFilter").value;
   return products.filter(p=>{
-    let hay=[p.name,p.category,p.subcategory,p.packSize,p.sku,p.status,p.assetType,p.notes,...(p.channels||[]),...(p.accounts||[])].join(" ").toLowerCase();
+    let hay=[p.name,p.category,p.subcategory,p.packSize,p.sku,p.status,p.visibility,p.assetType,p.notes,...(p.channels||[]),...(p.accounts||[])].join(" ").toLowerCase();
     return(!kw||hay.includes(kw))&&(!cat||p.category===cat)&&(!ch||(p.channels||[]).includes(ch))&&(!stat||p.status===stat)
   });
 }
@@ -234,19 +308,19 @@ function productImage(p,detail=false){
   return `<div class="${cls}">${p.photoURL?`<img src="${esc(p.photoURL)}" alt="${esc(p.name)}">`:pack}<span class="status ${st(p.status)}">${esc(p.status||"Check")}</span></div>`;
 }
 function renderCatalog(){
-  const r=results();renderStats(r);
+  const r=results();renderStats(r);if($("viewerNote"))$("viewerNote").textContent=currentUser?"Admin view: you can see Public, Private, and Draft products.":"Public view: only products marked as Public are visible.";
   if(!configured()){
     $("catalogGrid").innerHTML=`<div class="empty show"><h3>Firebase config needed</h3><p>Paste your Firebase Web App config inside this HTML file, then upload it to Firebase Hosting or GitHub Pages.</p></div>`;
     return;
   }
-  $("catalogGrid").innerHTML=r.map(p=>`<article class="card">${productImage(p)}<div class="body"><div class="title"><h3>${esc(p.name)}</h3><span>${esc(p.category||"Category")}</span></div><div class="meta"><div><small>Pack Size</small><b>${esc(p.packSize||"-")}</b></div><div><small>SKU</small><b>${esc(p.sku||"-")}</b></div></div><div class="tags">${(p.channels||[]).map(c=>`<span class="chip channel">${esc(c)}</span>`).join("")}</div><div class="tags">${(p.accounts||[]).slice(0,5).map(a=>`<span class="chip account">${esc(a)}</span>`).join("")}${(p.accounts||[]).length>5?`<span class="chip account">+${p.accounts.length-5}</span>`:""}</div><div class="card-actions"><button class="btn secondary" onclick="openDetails('${esc(p.id)}')">View Details</button><button class="btn primary" onclick="copyProduct('${esc(p.id)}')">Copy Info</button></div><div class="admin-actions ${currentUser?"show":""}"><button class="btn secondary" onclick="editProduct('${esc(p.id)}')">Edit</button><button class="btn danger" onclick="deleteProductItem('${esc(p.id)}')">Delete</button></div></div></article>`).join("")+`<div class="empty ${r.length?"":"show"}"><h3>No products found</h3><p>${products.length?"Try a different keyword or filter.":"No Firebase products yet. Sign in and add your first item."}</p></div>`;
+  $("catalogGrid").innerHTML=r.map(p=>`<article class="card">${productImage(p)}<div class="body"><div class="title"><h3>${esc(p.name)}</h3><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><span>${esc(p.category||"Category")}</span>${currentUser?`<em class="visibility-badge ${(p.visibility||"Public").toLowerCase()}">${esc(p.visibility||"Public")}</em>`:""}</div></div><div class="meta"><div><small>Pack Size</small><b>${esc(p.packSize||"-")}</b></div><div><small>SKU</small><b>${esc(p.sku||"-")}</b></div></div><div class="tags">${(p.channels||[]).map(c=>`<span class="chip channel">${esc(c)}</span>`).join("")}</div><div class="tags">${(p.accounts||[]).slice(0,5).map(a=>`<span class="chip account">${esc(a)}</span>`).join("")}${(p.accounts||[]).length>5?`<span class="chip account">+${p.accounts.length-5}</span>`:""}</div><div class="card-actions"><button class="btn secondary" onclick="openDetails('${esc(p.id)}')">View Details</button><button class="btn primary" onclick="copyProduct('${esc(p.id)}')">Copy Info</button></div><div class="admin-actions ${currentUser?"show":""}"><button class="btn secondary" onclick="editProduct('${esc(p.id)}')">Edit</button><button class="btn danger" onclick="deleteProductItem('${esc(p.id)}')">Delete</button></div></div></article>`).join("")+`<div class="empty ${r.length?"":"show"}"><h3>No products found</h3><p>${products.length?"Try a different keyword or filter.":"No Firebase products yet. Sign in and add your first item."}</p></div>`;
 }
-function productText(p){return`${p.name}\nCategory: ${p.category||""} / ${p.subcategory||""}\nPack Size: ${p.packSize||""}\nSKU: ${p.sku||""}\nStatus: ${p.status||""}\nChannels: ${(p.channels||[]).join(", ")}\nAvailable Accounts: ${(p.accounts||[]).join(", ")}\nAsset Type: ${p.assetType||""}\nNotes: ${p.notes||""}`}
+function productText(p){return`${p.name}\nCategory: ${p.category||""} / ${p.subcategory||""}\nPack Size: ${p.packSize||""}\nSKU: ${p.sku||""}\nStatus: ${p.status||""}\nVisibility: ${p.visibility||"Public"}\nChannels: ${(p.channels||[]).join(", ")}\nAvailable Accounts: ${(p.accounts||[]).join(", ")}\nAsset Type: ${p.assetType||""}\nNotes: ${p.notes||""}`}
 window.copyProduct=id=>{let p=products.find(x=>x.id===id);if(!p)return;navigator.clipboard?.writeText(productText(p)).then(()=>toast("Product info copied.")).catch(()=>toast("Copy is not available in this browser."))}
 window.openDetails=id=>{
   let p=products.find(x=>x.id===id);if(!p)return;
   $("detailTitle").textContent=p.name||"Product Details";
-  $("detailBody").innerHTML=`<div class="detail">${productImage(p,true)}<div><div class="list"><div class="row"><b>Category</b><span>${esc(p.category||"")} / ${esc(p.subcategory||"")}</span></div><div class="row"><b>Pack Size</b><span>${esc(p.packSize||"")}</span></div><div class="row"><b>SKU Code</b><span>${esc(p.sku||"")}</span></div><div class="row"><b>Status</b><span>${esc(p.status||"")}</span></div><div class="row"><b>Channels</b><span>${(p.channels||[]).map(c=>`<span class="chip channel">${esc(c)}</span>`).join(" ")}</span></div><div class="row"><b>Accounts</b><span>${(p.accounts||[]).map(a=>`<span class="chip account">${esc(a)}</span>`).join(" ")}</span></div><div class="row"><b>Asset Type</b><span>${esc(p.assetType||"")}</span></div><div class="row"><b>Notes</b><span>${esc(p.notes||"")}</span></div></div><div class="copybox"><b>Download:</b><br>${p.assetURL?`<a class="btn primary" href="${esc(p.assetURL)}" target="_blank" download>Download Asset File</a>`:"No downloadable asset uploaded yet."}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:13px"><button class="btn primary" onclick="copyProduct('${esc(p.id)}')">Copy Product Info</button>${currentUser?`<button class="btn secondary" onclick="editProduct('${esc(p.id)}');closeDetails();">Edit Product</button>`:""}</div></div></div>`;
+  $("detailBody").innerHTML=`<div class="detail">${productImage(p,true)}<div><div class="list"><div class="row"><b>Category</b><span>${esc(p.category||"")} / ${esc(p.subcategory||"")}</span></div><div class="row"><b>Pack Size</b><span>${esc(p.packSize||"")}</span></div><div class="row"><b>SKU Code</b><span>${esc(p.sku||"")}</span></div><div class="row"><b>Status</b><span>${esc(p.status||"")}</span></div><div class="row"><b>Visibility</b><span>${esc(p.visibility||"Public")}</span></div><div class="row"><b>Channels</b><span>${(p.channels||[]).map(c=>`<span class="chip channel">${esc(c)}</span>`).join(" ")}</span></div><div class="row"><b>Accounts</b><span>${(p.accounts||[]).map(a=>`<span class="chip account">${esc(a)}</span>`).join(" ")}</span></div><div class="row"><b>Asset Type</b><span>${esc(p.assetType||"")}</span></div><div class="row"><b>Notes</b><span>${esc(p.notes||"")}</span></div></div><div class="copybox"><b>Download:</b><br>${p.assetURL?`<a class="btn primary" href="${esc(p.assetURL)}" target="_blank" download>Download Asset File</a>`:"No downloadable asset uploaded yet."}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:13px"><button class="btn primary" onclick="copyProduct('${esc(p.id)}')">Copy Product Info</button>${currentUser?`<button class="btn secondary" onclick="editProduct('${esc(p.id)}');closeDetails();">Edit Product</button>`:""}</div></div></div>`;
   $("detailModal").classList.add("show");$("detailModal").setAttribute("aria-hidden","false");
 }
 function closeDetails(){$("detailModal").classList.remove("show");$("detailModal").setAttribute("aria-hidden","true")}
@@ -295,7 +369,7 @@ async function compressImageToDataURL(file,maxWidth=900,quality=.72){
   return dataURL;
 }
 function clearForm(){
-  editingId=null;$("productForm").reset();$("pPhotoUrl").value="";if($("pAssetUrl"))$("pAssetUrl").value="";$("formTitle").textContent="Add Product Asset";$("saveProductBtn").textContent="Save Product";$("photoHelper").textContent="Upload product packshot/photo.";$("assetHelper").textContent="Optional link only. File upload removed para hindi na kailangan Firebase Storage.";$("productPhotoPreview").textContent="No product photo selected";
+  editingId=null;$("productForm").reset();$("pPhotoUrl").value="";if($("pAssetUrl"))$("pAssetUrl").value="";if($("pVisibility"))$("pVisibility").value="Public";$("formTitle").textContent="Add Product Asset";$("saveProductBtn").textContent="Save Product";$("photoHelper").textContent="Upload product packshot/photo.";$("assetHelper").textContent="Optional link only. File upload removed para hindi na kailangan Firebase Storage.";$("productPhotoPreview").textContent="No product photo selected";
 }
 async function saveProduct(e){
   e.preventDefault();
@@ -323,6 +397,7 @@ async function saveProduct(e){
       packSize:$("pPackSize").value.trim(),
       sku:$("pSku").value.trim(),
       status:$("pStatus").value,
+      visibility:$("pVisibility") ? $("pVisibility").value : "Public",
       channels:parseList($("pChannels").value),
       accounts:parseList($("pAccounts").value),
       assetType:$("pAssetType").value.trim(),
@@ -366,6 +441,7 @@ window.editProduct=id=>{
   $("pPackSize").value=p.packSize||"";
   $("pSku").value=p.sku||"";
   $("pStatus").value=p.status||"Available";
+  if($("pVisibility"))$("pVisibility").value=p.visibility||"Public";
   $("pChannels").value=(p.channels||[]).join("; ");
   $("pAccounts").value=(p.accounts||[]).join("; ");
   $("pAssetType").value=p.assetType||"";
