@@ -19,6 +19,7 @@
 .empty{display:none;grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:24px;padding:38px 20px;text-align:center;color:var(--muted)}.empty.show{display:block}
 .modal-bg{position:fixed;inset:0;z-index:50;display:none;place-items:center;padding:15px;background:rgba(30,42,54,.62);backdrop-filter:blur(8px)}.modal-bg.show{display:grid}.modal{width:min(760px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:28px;box-shadow:0 28px 80px rgba(0,0,0,.28)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}.modal-head h3{margin:0;font-size:18px}.close{width:38px;height:38px;border:0;border-radius:13px;background:#f1f4f7;font-size:22px}.modal-body{padding:20px}.auth-grid{display:grid;gap:10px}.detail{display:grid;grid-template-columns:.85fr 1.15fr;gap:16px}.detail-img{height:320px;border-radius:24px}.list{display:grid;gap:10px}.row{display:grid;grid-template-columns:130px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid #eef2f6;font-size:13px}.row b{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}.copybox{margin-top:14px;padding:13px;border-radius:17px;background:#f8fafc;border:1px solid #eef2f6;color:var(--muted);font-size:12px;line-height:1.5}.toast{position:fixed;right:14px;bottom:14px;z-index:80;max-width:340px;padding:12px 14px;border-radius:15px;color:#fff;background:#1e2a36;font-size:12px;font-weight:850;box-shadow:0 14px 35px rgba(30,42,54,.25);transform:translateY(140%);transition:.25s}.toast.show{transform:translateY(0)}
 @media(max-width:980px){.catalog{grid-template-columns:repeat(2,1fr)}.search{grid-template-columns:1fr 1fr}.search .btn{grid-column:span 2}.form-grid{grid-template-columns:1fr 1fr}}@media(max-width:650px){.app{padding:15px 9px 32px}.top{align-items:flex-start}.actions{display:none}.hero{padding:22px;border-radius:25px}.hero h2{font-size:34px}.stats{grid-template-columns:1fr 1fr;gap:9px}.toolbar{position:relative;border-radius:22px}.search{grid-template-columns:1fr}.search .btn{grid-column:auto}.catalog{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field.half{grid-column:auto}.detail{grid-template-columns:1fr}.detail-img{height:230px}.row{grid-template-columns:1fr;gap:4px}input,select,textarea{font-size:16px!important}}
+.google-btn{width:100%;background:#fff;color:#1f2b38;border:1px solid var(--line);box-shadow:0 10px 22px rgba(126,35,20,.06);font-weight:900}.google-icon{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#4285F4,#34A853,#FBBC05,#EA4335);color:#fff;font-size:12px;font-weight:950}.auth-divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.5px}.auth-divider:before,.auth-divider:after{content:"";height:1px;background:var(--line);flex:1}
 </style>
 </head>
 <body>
@@ -53,13 +54,13 @@
 <section class="catalog" id="catalogGrid"><div class="empty show"><h3>Loading products...</h3><p>Please wait.</p></div></section>
 </div>
 
-<div class="modal-bg" id="authModal" aria-hidden="true"><form class="modal" id="authForm"><div class="modal-head"><h3>Admin Login</h3><button class="close" type="button" id="closeAuthBtn">×</button></div><div class="modal-body auth-grid"><p style="margin:0;color:var(--muted);font-size:13px;line-height:1.5">Use Firebase Authentication email/password account. Create admin users in Firebase Console.</p><input id="adminEmailInput" type="email" required placeholder="admin@email.com"><input id="adminPasswordInput" type="password" required placeholder="Password"><button class="btn primary" type="submit">Sign In</button></div></form></div>
+<div class="modal-bg" id="authModal" aria-hidden="true"><form class="modal" id="authForm"><div class="modal-head"><h3>Admin Login</h3><button class="close" type="button" id="closeAuthBtn">×</button></div><div class="modal-body auth-grid"><p style="margin:0;color:var(--muted);font-size:13px;line-height:1.5">Sign in using your Google/Gmail account. Recommended admin: <b>edsscreate@gmail.com</b>.</p><button class="btn google-btn" type="button" id="googleLoginBtn"><span class="google-icon">G</span> Continue with Google</button><div class="auth-divider">or email/password fallback</div><input id="adminEmailInput" type="email" placeholder="admin@email.com"><input id="adminPasswordInput" type="password" placeholder="Password"><button class="btn primary" type="submit">Sign In with Email</button></div></form></div>
 <div class="modal-bg" id="detailModal" aria-hidden="true"><section class="modal"><div class="modal-head"><h3 id="detailTitle">Product Details</h3><button class="close" id="closeModalBtn">×</button></div><div class="modal-body" id="detailBody"></div></section></div>
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
@@ -74,7 +75,7 @@ const firebaseConfig = {
   measurementId: "G-J31RWKPQ1H"
 };
 
-let app, auth, db, storage, unsubscribeProducts, currentUser=null, editingId=null;
+let app, auth, db, storage, googleProvider, unsubscribeProducts, currentUser=null, editingId=null;
 let products=[], activeCategory="";
 const $=id=>document.getElementById(id);
 
@@ -95,7 +96,7 @@ function initFirebase(){
     return;
   }
   try{
-    app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app);storage=getStorage(app);
+    app=initializeApp(firebaseConfig);auth=getAuth(app);googleProvider=new GoogleAuthProvider();googleProvider.setCustomParameters({prompt:'select_account'});db=getFirestore(app);storage=getStorage(app);
     sync("Connecting...","warn");
     onAuthStateChanged(auth,user=>{
       currentUser=user;
@@ -105,6 +106,7 @@ function initFirebase(){
       renderCatalog();
     });
     listenProducts();
+    getRedirectResult(auth).catch(error=>toast(error.message || 'Google login failed.'));
   }catch(error){
     sync("Firebase error","bad");
     $("setupNotice").classList.add("show");
@@ -269,6 +271,21 @@ $("clearFormBtn").addEventListener("click",clearForm);
 $("adminBtn").addEventListener("click",()=>{currentUser?$("adminPanel").scrollIntoView({behavior:"smooth"}):$("authModal").classList.add("show")});
 $("closeAuthBtn").addEventListener("click",()=>$("authModal").classList.remove("show"));
 $("authModal").addEventListener("click",e=>{if(e.target.id==="authModal")$("authModal").classList.remove("show")});
+$("googleLoginBtn").addEventListener("click",async()=>{
+  if(!configured()){toast("Firebase config is missing or invalid.");return;}
+  try{
+    await signInWithPopup(auth,googleProvider);
+    $("authModal").classList.remove("show");
+    toast("Google account signed in.");
+  }catch(error){
+    if(error.code==="auth/popup-blocked" || error.code==="auth/popup-closed-by-user"){
+      try{ await signInWithRedirect(auth,googleProvider); }
+      catch(redirectError){ toast(redirectError.message || "Google login failed."); }
+    }else{
+      toast(error.message || "Google login failed.");
+    }
+  }
+});
 $("authForm").addEventListener("submit",async e=>{
   e.preventDefault();
   if(!configured()){toast("Firebase config is missing or old file is cached. Upload this exact FINAL index.html.");return;}
